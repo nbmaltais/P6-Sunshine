@@ -44,10 +44,14 @@ public class Utility {
     }
 
     public static String formatTemperature(Context context, double temperature) {
+        return formatTemperature(context,temperature,isMetric(context));
+    }
+
+    public static String formatTemperature(Context context, double temperature, boolean isMetric) {
         // Data stored in Celsius by default.  If user prefers to see in Fahrenheit, convert
         // the values here.
         String suffix = "\u00B0";
-        if (!isMetric(context)) {
+        if (!isMetric) {
             temperature = (temperature * 1.8) + 32;
         }
 
