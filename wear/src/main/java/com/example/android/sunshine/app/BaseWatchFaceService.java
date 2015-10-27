@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -21,6 +22,7 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.lang.ref.WeakReference;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class containing all the boiler plate code:
@@ -29,27 +31,22 @@ import java.util.TimeZone;
  *  - setting up a handler to generate update message in active mode
  * Created by Nicolas on 2015-10-26.
  */
-public abstract class BaseWatchFaceService extends CanvasWatchFaceService {
+public  class BaseWatchFaceService extends CanvasWatchFaceService {
 
     /**
      * Handler message id for updating the time periodically in interactive mode.
      */
     private static final int MSG_UPDATE_TIME = 0;
-
-    private long mInteractiveUpdateRateMs;
+    private static final String TAG = BaseWatchFaceService.class.getSimpleName();
 
 
     @Override
     public void onCreate() {
+        Log.d(TAG,"onCreate");
         super.onCreate();
-        mInteractiveUpdateRateMs = getInitialInteractiveUpdateRateMs();
     }
 
-    /**
-     * Must be overriden to return the initial update time in interracvie mode
-     * @return
-     */
-    abstract protected long getInitialInteractiveUpdateRateMs();
+
 
     private static class EngineHandler extends Handler {
         private final WeakReference<BaseWatchFaceService.BaseEngine> mWeakReference;
@@ -78,6 +75,8 @@ public abstract class BaseWatchFaceService extends CanvasWatchFaceService {
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         Time mTime;
 
+        private long mInteractiveUpdateRateMs = TimeUnit.SECONDS.toMillis(1);;
+
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -103,7 +102,26 @@ public abstract class BaseWatchFaceService extends CanvasWatchFaceService {
 
         boolean mRegisteredTimeZoneReceiver = false;
 
+        /**
+         * Call to set the update time in interractive mode
+         * @param updateRateMs
+         */
+        public void setInteractiveUpdateRateMs(long updateRateMs) {
+            if (updateRateMs == mInteractiveUpdateRateMs) {
+                return;
+            }
+            mInteractiveUpdateRateMs = updateRateMs;
 
+            // Stop and restart the timer so the new update rate takes effect immediately.
+            if (shouldTimerBeRunning()) {
+                updateTimer();
+            }
+        }
+
+        protected void adjustPaintColorToCurrentMode(Paint paint, int interactiveColor,
+                                                   int ambientColor) {
+            paint.setColor(isInAmbientMode() ? ambientColor : interactiveColor);
+        }
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -145,6 +163,17 @@ public abstract class BaseWatchFaceService extends CanvasWatchFaceService {
 
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
+            updateTimer();
+        }
+
+        @Override
+        public void onAmbientModeChanged(boolean inAmbientMode) {
+            super.onAmbientModeChanged(inAmbientMode);
+            Log.d(TAG, "onAmbientModeChanged: " + inAmbientMode);
+
+            mAmbient = inAmbientMode;
+
+            /* Check and trigger whether or not timer should be running (only in active mode). */
             updateTimer();
         }
 

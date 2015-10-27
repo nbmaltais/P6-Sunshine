@@ -47,7 +47,7 @@ public class WearUtils {
             double low = cursor.getDouble(INDEX_MIN_TEMP);
             String desc = cursor.getString(INDEX_SHORT_DESC);
 
-            PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(DataLayer.WEATHER_PATH);
+            PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(DataLayer.PATH_WEATHER);
             putDataMapRequest.getDataMap().putInt(DataLayer.KEY_WEATHER_ID, weatherId);
             putDataMapRequest.getDataMap().putString(DataLayer.KEY_MAX_TEMP, Utility.formatTemperature(context,high));
             putDataMapRequest.getDataMap().putString(DataLayer.KEY_MIN_TEMP, Utility.formatTemperature(context,low));
