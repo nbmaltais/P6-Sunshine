@@ -10,4 +10,5 @@ public class DataLayer {
     public static final String KEY_MIN_TEMP = "min_temp";
     public static final String KEY_SHORT_DESC = "short_desc";
     public static final String PATH_REQUEST_WEATHER = "/request_weather";
+    public static final String KEY_TIMESTAMP = "timestamp";
 }

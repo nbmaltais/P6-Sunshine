@@ -35,7 +35,7 @@ public class DataLayerListenerService extends WearableListenerService {
 
         // TODO: send the current weather to the wearable
 
-        WearUtils.sendWeatherToWearable(this,mGoogleApiClient);
+        WearUtils.sendWeatherToWearable(this,mGoogleApiClient,false);
 
     }
 
@@ -48,7 +48,10 @@ public class DataLayerListenerService extends WearableListenerService {
         // The watch face sends this message when it is started.
         if( messageEvent.getPath().equals(DataLayer.PATH_REQUEST_WEATHER) )
         {
-            WearUtils.sendWeatherToWearable(this,mGoogleApiClient);
+            // Add a timestamp to the data to ensure that the DataItem is unique
+            // and is transferred to the watch. If we don't do that,
+            // the framework won't sync since it will detect the data did not change.
+            WearUtils.sendWeatherToWearable(this,mGoogleApiClient,true);
         }
 
     }

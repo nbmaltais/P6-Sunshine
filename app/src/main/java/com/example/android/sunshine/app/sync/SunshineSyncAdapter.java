@@ -370,7 +370,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void updateWearable() {
-        WearUtils.sendWeatherToWearable(getContext(),mGoogleApiClient);
+        WearUtils.sendWeatherToWearable(getContext(),mGoogleApiClient,false);
     }
 
     private void updateWidgets() {

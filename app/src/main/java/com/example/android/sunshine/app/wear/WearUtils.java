@@ -32,7 +32,7 @@ public class WearUtils {
     private static final int INDEX_SHORT_DESC = 3;
 
 
-    static public void sendWeatherToWearable(Context context, GoogleApiClient googleApiClient )
+    static public void sendWeatherToWearable(Context context, GoogleApiClient googleApiClient, boolean addTimestamp )
     {
         String locationQuery = Utility.getPreferredLocation(context);
 
@@ -52,6 +52,12 @@ public class WearUtils {
             putDataMapRequest.getDataMap().putString(DataLayer.KEY_MAX_TEMP, Utility.formatTemperature(context,high));
             putDataMapRequest.getDataMap().putString(DataLayer.KEY_MIN_TEMP, Utility.formatTemperature(context,low));
             putDataMapRequest.getDataMap().putString(DataLayer.KEY_SHORT_DESC, desc);
+
+            if(addTimestamp)
+            {
+                putDataMapRequest.getDataMap().putLong(DataLayer.KEY_TIMESTAMP, System.currentTimeMillis());
+            }
+
             PutDataRequest request = putDataMapRequest.asPutDataRequest();
 
 
@@ -67,5 +73,7 @@ public class WearUtils {
 
         cursor.close();
     }
+
+
 
 }

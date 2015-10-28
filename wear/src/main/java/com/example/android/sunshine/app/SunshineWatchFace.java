@@ -21,7 +21,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.Log;
@@ -29,18 +28,11 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 import com.example.sunhine.lib.DataLayer;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.CapabilityApi;
-import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.MessageApi;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.Wearable;
 
 import java.util.concurrent.TimeUnit;
 
@@ -72,7 +64,10 @@ public class SunshineWatchFace extends BaseWatchFaceService
         private final String TAG = /*SunshineWatchFace.class.getSimpleName() + "." +*/ Engine.class.getSimpleName();
 
         Paint mBackgroundPaint;
-        Paint mTextPaint;
+        Paint mPrimaryTextPaint;
+        Paint mSecondaryTextPaint;
+        Paint mHighTempTextPaint;
+        Paint mLowTempTextPaint;
 
         float mXOffset;
         float mYOffset;
@@ -82,8 +77,9 @@ public class SunshineWatchFace extends BaseWatchFaceService
         private int mBackgroundActiveColor;
         private String mTempHigh = "-";
         private String mTempLow = "-";
-
-
+        private int mPrimaryTextColor;
+        private int mSecondaryTextColor;
+        private int mAmbiantTextColor;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -101,12 +97,18 @@ public class SunshineWatchFace extends BaseWatchFaceService
             mBackgroundPaint = new Paint();
 
             mBackgroundAmbiantColor = resources.getColor(R.color.ambiant_background);
-            mBackgroundActiveColor = resources.getColor(R.color.digital_background);
+            mBackgroundActiveColor = resources.getColor(R.color.active_background);
             mBackgroundPaint.setColor(mBackgroundActiveColor);
 
-            mTextPaint = new Paint();
-            mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
+            mPrimaryTextColor = resources.getColor(R.color.primary_text);
+            mSecondaryTextColor = resources.getColor(R.color.secondary_text);
+            mAmbiantTextColor = 0xFFFFFF;
 
+            mPrimaryTextPaint = new Paint();
+            mPrimaryTextPaint = createTextPaint(mPrimaryTextColor);
+            mSecondaryTextPaint = createTextPaint(mSecondaryTextColor);
+            mHighTempTextPaint = createTextPaint(mPrimaryTextColor);
+            mLowTempTextPaint = createTextPaint(mSecondaryTextColor);
             setInteractiveUpdateRateMs(INTERACTIVE_UPDATE_RATE_MS);
 
 
@@ -127,46 +129,14 @@ public class SunshineWatchFace extends BaseWatchFaceService
          */
         private void updateFromDataLayer() {
 
-            final ResultCallback<DataApi.DataItemResult> dataApiResultCallback = new ResultCallback<DataApi.DataItemResult>() {
+
+            /*Utils.getDataItemForLocalNode(mGoogleApiClient, DataLayer.PATH_WEATHER, new Utils.GetDataItemCallback() {
                 @Override
-                public void onResult(DataApi.DataItemResult dataItemResult) {
-                    if (dataItemResult.getStatus().isSuccess()) {
-
-                        Log.d(TAG,"updateFromDataLayer : received dataItemResult");
-
-                        if (dataItemResult.getDataItem() != null) {
-                            DataItem configDataItem = dataItemResult.getDataItem();
-                            DataMapItem dataMapItem = DataMapItem.fromDataItem(configDataItem);
-                            DataMap config = dataMapItem.getDataMap();
-                            updateFromDataMap(config);
-                            invalidate();
-                        }
-                        else
-                        {
-                            Log.d(TAG,"updateFromDataLayer received null");
-                        }
-                    }
+                public void onResult(DataMap data) {
+                    updateFromDataMap(data);
+                    invalidate();
                 }
-            };
-
-
-            ResultCallback<NodeApi.GetLocalNodeResult> nodeResultCallback = new ResultCallback<NodeApi.GetLocalNodeResult>() {
-                @Override
-                public void onResult(NodeApi.GetLocalNodeResult result) {
-                    Log.d(TAG,"updateFromDataLayer : received node results");
-                    String localNode = result.getNode().getId();
-                    Uri uri = new Uri.Builder()
-                            .scheme("wear")
-                            .path(DataLayer.PATH_WEATHER)
-                            .authority(localNode)
-                            .build();
-                    Wearable.DataApi.getDataItem(mGoogleApiClient, uri)
-                            .setResultCallback(dataApiResultCallback);
-                }
-            };
-
-
-            Wearable.NodeApi.getLocalNode(mGoogleApiClient).setResultCallback(nodeResultCallback);
+            });*/
 
         }
 
@@ -192,14 +162,18 @@ public class SunshineWatchFace extends BaseWatchFaceService
                     continue;
                 }
 
+
                 DataItem dataItem = dataEvent.getDataItem();
+
+                Log.d(TAG,"Received dataItem: uri = " + dataItem.getUri() );
+
                 if (!dataItem.getUri().getPath().equals( DataLayer.PATH_WEATHER)) {
                     continue;
                 }
 
                 DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
                 DataMap config = dataMapItem.getDataMap();
-
+                Log.d(TAG,"DataMap = " + config );
                 updateFromDataMap(config);
                 needRefresh=true;
 
@@ -227,7 +201,11 @@ public class SunshineWatchFace extends BaseWatchFaceService
 
             Log.d(TAG, "onAmbientModeChanged: " + inAmbientMode);
 
-            adjustPaintColorToCurrentMode(mBackgroundPaint,mBackgroundActiveColor,mBackgroundAmbiantColor);
+            adjustPaintColorToCurrentMode(mBackgroundPaint, mBackgroundActiveColor, mBackgroundAmbiantColor);
+            adjustPaintColorToCurrentMode(mPrimaryTextPaint,mPrimaryTextColor,mAmbiantTextColor);
+            adjustPaintColorToCurrentMode(mSecondaryTextPaint,mSecondaryTextColor,mAmbiantTextColor);
+            adjustPaintColorToCurrentMode(mHighTempTextPaint,mPrimaryTextColor,mAmbiantTextColor);
+            adjustPaintColorToCurrentMode(mLowTempTextPaint,mSecondaryTextColor,mAmbiantTextColor);
         }
 
         @Override
@@ -240,9 +218,14 @@ public class SunshineWatchFace extends BaseWatchFaceService
             mXOffset = resources.getDimension(isRound
                     ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
             float textSize = resources.getDimension(isRound
-                    ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
+                    ? R.dimen.primary_text_size_round : R.dimen.primary_text_size);
+            float secondaryTextSize = resources.getDimension(isRound
+                    ? R.dimen.secondary_text_size_round : R.dimen.secondary_text_size);
 
-            mTextPaint.setTextSize(textSize);
+            mPrimaryTextPaint.setTextSize(textSize);
+            mSecondaryTextPaint.setTextSize(secondaryTextSize);
+            mHighTempTextPaint.setTextSize(secondaryTextSize);
+            mLowTempTextPaint.setTextSize(secondaryTextSize);
         }
 
 
@@ -256,10 +239,14 @@ public class SunshineWatchFace extends BaseWatchFaceService
             String text = mAmbient
                     ? String.format("%d:%02d", mTime.hour, mTime.minute)
                     : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
-            canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+            canvas.drawText(text, mXOffset, mYOffset, mPrimaryTextPaint);
 
-            canvas.drawText(mTempHigh, mXOffset, mYOffset+mLineHeight, mTextPaint);
-            canvas.drawText(mTempLow, mXOffset, mYOffset+2*mLineHeight, mTextPaint);
+            float highSize = mHighTempTextPaint.measureText(mTempHigh);
+            float tampOffsetY = mYOffset+mLineHeight;
+            float padding = mHighTempTextPaint.measureText(" ");
+
+            canvas.drawText(mTempHigh, mXOffset, tampOffsetY, mHighTempTextPaint);
+            canvas.drawText(mTempLow, mXOffset+ highSize + padding, tampOffsetY, mLowTempTextPaint);
         }
 
     }
