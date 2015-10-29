@@ -2,6 +2,11 @@ package com.example.android.sunshine.app.wear;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.util.Log;
 
@@ -72,6 +77,24 @@ public class WearUtils {
         }
 
         cursor.close();
+    }
+
+    static public Bitmap createGrayBitmap(  Bitmap bm ) {
+        Bitmap grayBitmap = Bitmap.createBitmap(
+                bm.getWidth(),
+                bm.getHeight(),
+                Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(grayBitmap);
+        Paint grayPaint = new Paint();
+        ColorMatrix colorMatrix = new ColorMatrix();
+        colorMatrix.setSaturation(0);
+        ColorMatrixColorFilter filter = new ColorMatrixColorFilter(colorMatrix);
+        grayPaint.setColorFilter(filter);
+        canvas.drawBitmap(bm, 0, 0, grayPaint);
+
+        canvas.save();
+
+        return grayBitmap;
     }
 
 

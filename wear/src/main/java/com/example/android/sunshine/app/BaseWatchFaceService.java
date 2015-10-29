@@ -84,6 +84,7 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
          */
         boolean mLowBitAmbient;
         boolean mAmbient;
+        boolean mBurnInProtection;
 
         // Google api client
         GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(BaseWatchFaceService.this)
@@ -106,7 +107,7 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
          * Call to set the update time in interractive mode
          * @param updateRateMs
          */
-        public void setInteractiveUpdateRateMs(long updateRateMs) {
+        final public void setInteractiveUpdateRateMs(long updateRateMs) {
             if (updateRateMs == mInteractiveUpdateRateMs) {
                 return;
             }
@@ -118,9 +119,16 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
             }
         }
 
-        protected void adjustPaintColorToCurrentMode(Paint paint, int interactiveColor,
+        final protected void adjustPaintColorToCurrentMode(Paint paint, int interactiveColor,
                                                    int ambientColor) {
             paint.setColor(isInAmbientMode() ? ambientColor : interactiveColor);
+        }
+
+        /**
+         * Override to enable/disable antialiasing when needed
+         * @param antiAlias
+         */
+        protected void updateAntialiasing(boolean antiAlias) {
         }
 
         @Override
@@ -173,14 +181,22 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
 
             mAmbient = inAmbientMode;
 
+            if (mLowBitAmbient) {
+                boolean antiAlias = !inAmbientMode;
+                updateAntialiasing(antiAlias);
+            }
+
             /* Check and trigger whether or not timer should be running (only in active mode). */
             updateTimer();
         }
+
+
 
         @Override
         public void onPropertiesChanged(Bundle properties) {
             super.onPropertiesChanged(properties);
             mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
         }
 
         @Override

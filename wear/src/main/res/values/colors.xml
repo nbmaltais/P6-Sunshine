@@ -4,4 +4,6 @@
     <color name="active_background">#03A9F4</color>
     <color name="primary_text">#ffffff</color>
     <color name="secondary_text">#ADDFFB</color>
+    <color name="ambiant_text">#ffffff</color>
+    <color name="separator">#60C2F7</color>
 </resources>

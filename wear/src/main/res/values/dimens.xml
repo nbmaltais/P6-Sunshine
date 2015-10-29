@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="primary_text_size">40dp</dimen>
-    <dimen name="primary_text_size_round">45dp</dimen>
-    <dimen name="digital_x_offset">15dp</dimen>
-    <dimen name="digital_x_offset_round">25dp</dimen>
-    <dimen name="digital_y_offset">90dp</dimen>
-    <dimen name="digital_line_height">40dp</dimen>
-    <dimen name="secondary_text_size_round">35dp</dimen>
-    <dimen name="secondary_text_size">40dp</dimen>
+    <integer name="base_size">280</integer>
+    <integer name="time_text_size">50</integer>
+    <integer name="time_text_size_round">50</integer>
+
+    <integer name="date_text_size">20</integer>
+    <integer name="date_text_size_round">20</integer>
+
+
+    <integer name="temperature_text_size">40</integer>
+    <integer name="temperature_text_size_round">40</integer>
+
+    <integer name="text_spacing">30</integer>
+    <integer name="text_spacing_round">30</integer>
+
+    <dimen name="x_offset">15dp</dimen>
+    <dimen name="x_offset_round">25dp</dimen>
+    <integer name="time_y_offset">90</integer>
+    <integer name="date_y_offset">130</integer>
+    <integer name="separator_y_offset">157</integer>
+    <integer name="temperature_y_offset">211</integer>
+    <integer name="image_y_offset">174</integer>
+    <integer name="image_x_offset">50</integer>
+    <integer name="temperature_high_x_offset">140</integer>
+    <integer name="temperature_low_x_offset">208</integer>
+    <integer name="weather_image_size">45</integer>
 </resources>
