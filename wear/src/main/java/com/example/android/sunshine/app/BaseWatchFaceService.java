@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +24,7 @@ import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.Wearable;
 
 import java.lang.ref.WeakReference;
+import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -73,7 +77,7 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
     {
         private final String TAG = BaseEngine.class.getSimpleName();
         final Handler mUpdateTimeHandler = new EngineHandler(this);
-        Time mTime;
+        Calendar mCalendar;
 
         private long mInteractiveUpdateRateMs = TimeUnit.SECONDS.toMillis(1);;
 
@@ -96,8 +100,8 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
             }
         };
 
@@ -135,7 +139,7 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            mTime = new Time();
+            mCalendar = Calendar.getInstance();
         }
 
 
@@ -156,8 +160,8 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
                 registerReceiver();
 
                 // Update time zone in case it changed while we weren't visible.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
+                mCalendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
             } else {
 
                 unregisterReceiver();
@@ -232,6 +236,24 @@ public  class BaseWatchFaceService extends CanvasWatchFaceService {
 
 
         }
+
+        /**
+         * Draw the background image. bitmaps must already be resized
+         * @param canvas
+         * @param color
+         * @param gray
+         */
+        protected void drawBackground(Canvas canvas , Bitmap color , Bitmap gray, Paint backgroundPaint)
+        {
+            if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
+                canvas.drawColor(Color.BLACK);
+            } else if (mAmbient) {
+                canvas.drawBitmap(gray, 0, 0, backgroundPaint);
+            } else {
+                canvas.drawBitmap(color, 0, 0, backgroundPaint);
+            }
+        }
+
 
         /**
          * Starts the {@link #mUpdateTimeHandler} timer if it should be running and isn't currently

@@ -20,6 +20,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -96,6 +98,7 @@ public class SunshineWatchFace extends BaseWatchFaceService
         private float mTextSpacing;
 
         private Bitmap mWeatherBitmap;
+        private Bitmap mWeatherBitmapGray;
         private float mWeatherImageWidth;
         private float mWeatherImageHeight;
         private float mTemperatureHighXOffset;
@@ -183,21 +186,46 @@ public class SunshineWatchFace extends BaseWatchFaceService
             mTempHigh = config.getString(DataLayer.KEY_MAX_TEMP);
             mTempLow = config.getString(DataLayer.KEY_MIN_TEMP);
             int weatherId = config.getInt(DataLayer.KEY_WEATHER_ID);
-            int resId = Utils.getIconResourceForWeatherCondition(weatherId);
+            int resId = Utils.getIconResourceForWeatherCondition(weatherId, false);
             if(resId!=-1)
             {
                 mWeatherBitmap = BitmapFactory.decodeResource(getResources(), resId);
 
                 mWeatherBitmap = Bitmap.createScaledBitmap(mWeatherBitmap,
-                        (int)mWeatherImageWidth,(int)mWeatherImageHeight, true);
+                        (int) mWeatherImageWidth, (int) mWeatherImageHeight, true);
+
             }
             else if(mWeatherBitmap!=null)
             {
                 mWeatherBitmap.recycle();
                 mWeatherBitmap=null;
             }
+
+            resId = Utils.getIconResourceForWeatherCondition(weatherId, true);
+            if(resId!=-1)
+            {
+                mWeatherBitmapGray = BitmapFactory.decodeResource(getResources(), resId);
+
+                mWeatherBitmapGray = Bitmap.createScaledBitmap(mWeatherBitmapGray,
+                        (int) mWeatherImageWidth, (int) mWeatherImageHeight, true);
+
+            }
+            else if(mWeatherBitmapGray!=null)
+            {
+                mWeatherBitmapGray.recycle();
+                mWeatherBitmapGray=null;
+            }
         }
 
+
+
+        @Override
+        protected void updateAntialiasing(boolean antiAlias) {
+            mTimeTextPaint.setAntiAlias(antiAlias);
+            mDateTextPaint.setAntiAlias(antiAlias);
+            mHighTempTextPaint.setAntiAlias(antiAlias);
+            mLowTempTextPaint.setAntiAlias(antiAlias);
+        }
 
         // DataApi callbacks
 
@@ -338,18 +366,21 @@ public class SunshineWatchFace extends BaseWatchFaceService
             canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
 
             // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
-            mTime.setToNow();
+            long now = System.currentTimeMillis();
+            mCalendar.setTimeInMillis(now);
+
+
 
 
             String timeText = mAmbient
-                    ? String.format("%d:%02d", mTime.hour, mTime.minute)
-                    : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
+                    ? String.format("%d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE))
+                    : String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE), mCalendar.get(Calendar.SECOND));
 
             canvas.drawText(timeText, mCenterX, mTimeYOffset, mTimeTextPaint);
 
             //.format(Date date)
 
-            String dateText = mDateFormat.format(new Date(System.currentTimeMillis()));
+            String dateText = mDateFormat.format(new Date(now));
 
             //String dateText = "TODO TODO";
             canvas.drawText(dateText, mCenterX, mDateYOffset, mDateTextPaint);
@@ -357,8 +388,17 @@ public class SunshineWatchFace extends BaseWatchFaceService
             canvas.drawLine(mCenterX-50,mSeparatorYOffset,mCenterX+50,mSeparatorYOffset,mSeparatorPaint);
 
             //float x = mXOffset;
-            if(mWeatherBitmap!=null) {
-                canvas.drawBitmap(mWeatherBitmap, mImageXOffet, mImageYOffset, mBackgroundPaint);
+            if(mAmbient)
+            {
+                if(mWeatherBitmapGray!=null) {
+                    canvas.drawBitmap(mWeatherBitmapGray, mImageXOffet, mImageYOffset, mBackgroundPaint);
+                }
+            }
+            else
+            {
+                if(mWeatherBitmap!=null) {
+                    canvas.drawBitmap(mWeatherBitmap, mImageXOffet, mImageYOffset, mBackgroundPaint);
+                }
             }
 
             //x = x + mWeatherImageWidth + padding;

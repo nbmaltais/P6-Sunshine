@@ -1,5 +1,10 @@
 package com.example.android.sunshine.app;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.util.Log;
 
@@ -90,32 +95,49 @@ public class Utils {
         Wearable.NodeApi.getLocalNode(googleApiClient).setResultCallback(nodeResultCallback);
     }
 
-    public static int getIconResourceForWeatherCondition(int weatherId) {
+    public static int getIconResourceForWeatherCondition(int weatherId, boolean ambiantMode) {
         // Based on weather code data found at:
         // http://bugs.openweathermap.org/projects/api/wiki/Weather_Condition_Codes
         if (weatherId >= 200 && weatherId <= 232) {
-            return R.drawable.ic_storm;
+            return !ambiantMode ? R.drawable.ic_storm : R.drawable.ic_storm_ambiant;
         } else if (weatherId >= 300 && weatherId <= 321) {
-            return R.drawable.ic_light_rain;
+            return !ambiantMode ? R.drawable.ic_light_rain :  R.drawable.ic_light_rain_ambiant;
         } else if (weatherId >= 500 && weatherId <= 504) {
-            return R.drawable.ic_rain;
+            return !ambiantMode ? R.drawable.ic_rain : R.drawable.ic_rain_ambiant;
         } else if (weatherId == 511) {
-            return R.drawable.ic_snow;
+            return !ambiantMode ? R.drawable.ic_snow : R.drawable.ic_snow_ambiant;
         } else if (weatherId >= 520 && weatherId <= 531) {
-            return R.drawable.ic_rain;
+            return !ambiantMode ? R.drawable.ic_rain : R.drawable.ic_rain_ambiant;
         } else if (weatherId >= 600 && weatherId <= 622) {
-            return R.drawable.ic_snow;
+            return !ambiantMode ? R.drawable.ic_snow : R.drawable.ic_snow_ambiant;
         } else if (weatherId >= 701 && weatherId <= 761) {
-            return R.drawable.ic_fog;
+            return !ambiantMode ? R.drawable.ic_fog : R.drawable.ic_fog_ambiant;
         } else if (weatherId == 761 || weatherId == 781) {
-            return R.drawable.ic_storm;
+            return !ambiantMode ? R.drawable.ic_storm : R.drawable.ic_storm_ambiant;
         } else if (weatherId == 800) {
-            return R.drawable.ic_clear;
+            return !ambiantMode ? R.drawable.ic_clear : R.drawable.ic_clear_ambiant;
         } else if (weatherId == 801) {
-            return R.drawable.ic_light_clouds;
+            return !ambiantMode ? R.drawable.ic_light_clouds : R.drawable.ic_light_clouds_ambiant;
         } else if (weatherId >= 802 && weatherId <= 804) {
-            return R.drawable.ic_cloudy;
+            return !ambiantMode ? R.drawable.ic_cloudy : R.drawable.ic_cloudy_ambiant;
         }
+
         return -1;
+    }
+
+    static public Bitmap createGrayScaleBitmap(Bitmap colorBitmap) {
+        Bitmap grayBitmap = Bitmap.createBitmap(
+                colorBitmap.getWidth(),
+                colorBitmap.getHeight(),
+                Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(colorBitmap);
+        Paint grayPaint = new Paint();
+        ColorMatrix colorMatrix = new ColorMatrix();
+        colorMatrix.setSaturation(0);
+        ColorMatrixColorFilter filter = new ColorMatrixColorFilter(colorMatrix);
+        grayPaint.setColorFilter(filter);
+        canvas.drawBitmap(colorBitmap, 0, 0, grayPaint);
+
+        return grayBitmap;
     }
 }
